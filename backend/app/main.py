@@ -19,6 +19,7 @@ import time
 from .version import __version__
 from .core.utils.error_handlers import setup_error_handlers
 from .core.utils.logger import setup_logging
+from .core.utils.rate_limiter import rate_limit_middleware
 
 # Import all routes
 from .api.routes import (
@@ -55,6 +56,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Rate limiting middleware
+app.middleware("http")(rate_limit_middleware)
 
 # Request logging middleware
 @app.middleware("http")
