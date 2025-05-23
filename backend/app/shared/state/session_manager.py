@@ -1,46 +1,78 @@
-from typing import Dict, Any
-import threading
+import os
+import getpass
+from shared.users.user_identity import UserIdentity
 
 class SessionManager:
-    _instance = None
-    _lock = threading.Lock()
+    """
+    Tracks user session metadata including profile, context flags, memory, and role identity.
+    Designed as a singleton used across the app.
+    """
 
-    def __new__(cls):
-        with cls._lock:
-            if cls._instance is None:
-                cls._instance = super().__new__(cls)
-                cls._instance._init_session()
-            return cls._instance
+    def __init__(self):
+        self._context = {}     # Arbitrary runtime flags (e.g., feature toggles, state)
+        self._profile = {}     # Dict-based user profile
+        self._memory = {}      # Transient in-session memory, if needed
+        self.user_identity = UserIdentity()  # Handles role resolution
 
-    def _init_session(self):
-        self._memory: Dict[str, Any] = {}
-        self._user_name = None
-        self._user_role = None
-        self._device_id = None
+    # === Profile Handling ===
 
-    def get_memory(self) -> Dict[str, Any]:
-        return self._memory
+    def set_user_profile(self, profile: dict):
+        """
+        Set the session's user profile. Example keys: name, device_id, email.
+        """
+        self._profile = profile
+        self._context["username"] = profile.get("name", "unknown")
 
-    def set_memory(self, key: str, value: Any):
-        self._memory[key] = value
-
-    def clear_memory(self):
-        self._memory.clear()
+    def get_user_profile(self) -> dict:
+        """
+        Returns the full user profile dictionary.
+        """
+        return self._profile
 
     def get_user_name(self) -> str:
-        return self._user_name
+        """
+        Retrieves the current username from profile, env, or system.
+        """
+        return (
+            self._profile.get("name")
+            or os.environ.get("USER")
+            or getpass.getuser()
+            or "member"
+        )
 
     def get_user_role(self) -> str:
-        return self._user_role
+        """
+        Resolves the user's role via the identity service.
+        """
+        return self.user_identity.get_role(self.get_user_name())
 
-    def set_user_profile(self, name: str, role: str):
-        self._user_name = name
-        self._user_role = role
+    # === Runtime Flags ===
 
-    def set_device_id(self, device_id: str):
-        self._device_id = device_id
+    def get_flag(self, key: str):
+        """
+        Retrieve a temporary flag from session context.
+        """
+        return self._context.get(key)
 
-    def get_device_id(self) -> str:
-        return self._device_id
+    def set_flag(self, key: str, value):
+        """
+        Set a custom runtime flag.
+        """
+        self._context[key] = value
 
+    # === Accessors ===
+
+    def get_context(self) -> dict:
+        """
+        Get raw context flags dictionary.
+        """
+        return self._context
+
+    def get_memory(self) -> dict:
+        """
+        Get in-session memory dictionary.
+        """
+        return self._memory
+
+# === Global Singleton Instance ===
 session = SessionManager()
