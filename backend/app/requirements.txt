@@ -7,3 +7,10 @@ cryptography==41.0.7
 pyotp==2.9.0
 pydantic==2.5.3
 python-multipart==0.0.6
+openai==1.8.0
+colorama==0.4.6
+pytest==7.4.3
+pytest-asyncio==0.23.2
+httpx==0.26.0
+alembic==1.13.1
+psycopg2-binary==2.9.9
