@@ -10,11 +10,15 @@ Responsibilities:
 - Configure logging
 - Auto-generate OpenAPI docs
 """
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+import logging
+import time
 
 from .version import __version__
+from .core.utils.error_handlers import setup_error_handlers
+from .core.utils.logger import setup_logging
 
 # Import all routes
 from .api.routes import (
@@ -32,6 +36,10 @@ from .api.routes import (
     verify_routes
 )
 
+# Initialize logging
+setup_logging()
+logger = logging.getLogger(__name__)
+
 # Initialize FastAPI app
 app = FastAPI(
     title="HyphaeOS API",
@@ -47,6 +55,26 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Request logging middleware
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    start_time = time.time()
+    response = await call_next(request)
+    duration = time.time() - start_time
+    
+    logger.info(
+        f"{request.method} {request.url.path}",
+        extra={
+            "duration_ms": round(duration * 1000, 2),
+            "status_code": response.status_code,
+            "client_ip": request.client.host,
+        }
+    )
+    return response
+
+# Register error handlers
+setup_error_handlers(app)
 
 # Register routes
 app.include_router(auth_routes.router, prefix="/api", tags=["auth"])
@@ -64,6 +92,14 @@ app.include_router(verify_routes.router, prefix="/api", tags=["verify"])
 
 # Mount static files (if needed)
 app.mount("/", StaticFiles(directory="static", html=True), name="static")
+
+@app.on_event("startup")
+async def startup_event():
+    logger.info(f"Starting HyphaeOS API v{__version__}")
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    logger.info("Shutting down HyphaeOS API")
 
 if __name__ == "__main__":
     import uvicorn
