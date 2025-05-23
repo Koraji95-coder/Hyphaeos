@@ -1,40 +1,21 @@
-import logging
-from typing import Dict, Any
+import importlib
 
-logger = logging.getLogger(__name__)
+def execute_plugin(plugin_name: str, input_text: str) -> dict:
+    try:
+        module_path = f"shared.plugins.{plugin_name}"
+        plugin = importlib.import_module(module_path)
 
-class PluginExecutor:
-    def __init__(self):
-        self.plugins: Dict[str, callable] = {}
-
-    def register_plugin(self, name: str, handler: callable):
-        """Register a new plugin handler"""
-        self.plugins[name] = handler
-        logger.info(f"Plugin registered: {name}")
-
-    def execute(self, plugin_name: str, input_data: Any) -> Dict[str, Any]:
-        """Execute a plugin with given input"""
-        try:
-            if plugin_name not in self.plugins:
-                raise ValueError(f"Plugin not found: {plugin_name}")
-
-            handler = self.plugins[plugin_name]
-            result = handler(input_data)
-
+        if hasattr(plugin, "run"):
+            output = plugin.run(input_text)
             return {
-                "status": "success",
                 "plugin": plugin_name,
-                "output": result
+                "input": input_text,
+                "output": output
             }
-        except Exception as e:
-            logger.error(f"Plugin execution failed: {e}")
-            return {
-                "status": "error",
-                "plugin": plugin_name,
-                "error": str(e)
-            }
+        else:
+            return { "error": f"Plugin '{plugin_name}' missing 'run()'" }
 
-executor = PluginExecutor()
-
-def execute_plugin(name: str, input_data: Any) -> Dict[str, Any]:
-    return executor.execute(name, input_data)
+    except ModuleNotFoundError:
+        return { "error": f"Plugin '{plugin_name}' not found." }
+    except Exception as e:
+        return { "error": str(e) }
