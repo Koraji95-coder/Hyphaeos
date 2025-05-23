@@ -12,6 +12,7 @@ import {
 import StatusCard from '../../ui/StatusCard';
 import RecentActivity from '../widgets/RecentActivity';
 import SystemMetrics from '../widgets/SystemMetrics';
+import WeatherWidget from '../widgets/WeatherWidget';
 
 const Overview: React.FC = () => {
   // Sample data - would come from API in a real app
@@ -131,7 +132,7 @@ const Overview: React.FC = () => {
         <motion.div
           variants={itemVariants}
         >
-          <RecentActivity />
+          <WeatherWidget />
         </motion.div>
       </motion.div>
 
@@ -142,44 +143,10 @@ const Overview: React.FC = () => {
         animate="visible"
       >
         <motion.div 
-          className="bg-dark-200/80 backdrop-blur-sm rounded-xl p-6 border border-dark-100/50 shadow-lg"
+          className="lg:col-span-1"
           variants={itemVariants}
         >
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-semibold text-white">Active Processes</h2>
-            <span className="bg-primary-500/20 text-primary-300 rounded-full px-2 py-1 text-xs font-medium">
-              {systemStatus.activeProcesses} Running
-            </span>
-          </div>
-          
-          <div className="space-y-3">
-            {Array.from({ length: 5 }).map((_, index) => (
-              <div 
-                key={index}
-                className="flex items-center justify-between p-3 rounded-lg bg-dark-300/50 border border-dark-100/30"
-              >
-                <div className="flex items-center">
-                  <div className={`w-2 h-2 rounded-full mr-3 ${
-                    index < systemStatus.activeProcesses ? 'bg-success-500' : 'bg-gray-500'
-                  }`}></div>
-                  <div>
-                    <p className="text-white font-medium">Process #{index + 1001}</p>
-                    <p className="text-xs text-gray-400">Runtime: {Math.floor(Math.random() * 60)} min</p>
-                  </div>
-                </div>
-                <div className="flex items-center">
-                  <span className={`text-xs font-medium ${
-                    index < systemStatus.activeProcesses ? 'text-success-400' : 'text-gray-500'
-                  }`}>
-                    {index < systemStatus.activeProcesses ? 'Active' : 'Inactive'}
-                  </span>
-                  <button className="ml-4 p-1.5 rounded-full hover:bg-dark-100/50 text-gray-400 hover:text-white">
-                    <Activity size={16} />
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
+          <RecentActivity />
         </motion.div>
         
         <motion.div 
