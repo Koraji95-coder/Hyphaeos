@@ -11,14 +11,5 @@ export default defineConfig({
     alias: {
       '@': path.resolve(__dirname, 'src'), // Enables "@/services/api"
     },
-  },
-  //server: {
-  //  proxy: {
-  //    '/api': {
-  //      target: 'http://localhost:5137', // 👈 backend dev server port
-  //      changeOrigin: true,
-  //      secure: false,
-  //    }
-  //  }
-  //}
+  }
 });
